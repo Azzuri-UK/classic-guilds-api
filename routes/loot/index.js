@@ -4,3 +4,5 @@ let router = express.Router();
 router.get('/', function (req, res) {
     res.send('loot')
 })
+
+module.exports = router;
