@@ -3,7 +3,7 @@ let router = express.Router();
 let database = require('../../bin/db');
 
 router.get('/', function (req, res) {
-    database.query("SELECT * FROM raids").then((results) => {
+    database.query("SELECT * FROM raids ORDER BY raid_date ASC").then((results) => {
         res.json(results.rows)
     }).catch((error) => {
         res.json({})
@@ -12,7 +12,7 @@ router.get('/', function (req, res) {
 
 router.get('/:id', function (req, res) {
     const query = {
-        text: 'SELECT * FROM raids WHERE raid_id = $1',
+        text: 'SELECT * FROM raids WHERE raid_id = $1 ORDER BY raid_date ASC',
         values: [req.params.userId],
     };
 
