@@ -59,5 +59,30 @@ router.delete('/:id', function (req, res) {
     });
 });
 
+router.get('/:id/attendance/:role', function (req, res) {
+    const query = {
+        text: 'SELECT character_name,character_class FROM attendance INNER JOIN roster r on attendance.character_id = r.character_id where raid_id = $1 AND role = $2 ORDER BY character_name',
+        values: [req.params.id,req.params.role.charAt(0).toUpperCase() + req.params.role.slice(1)],
+    };
+    console.log(query)
+    database.query(query).then((results) => {
+        res.json(results.rows)
+    }).catch((error) => {
+        res.json(error)
+    })
+});
+
+router.get('/:id/attendance', function (req, res) {
+    const query = {
+        text: 'SELECT character_name,character_class,attendance.role FROM attendance INNER JOIN roster r on attendance.character_id = r.character_id where raid_id = $1 ORDER BY character_name',
+        values: [req.params.id]
+    };
+    console.log(query)
+    database.query(query).then((results) => {
+        res.json(results.rows)
+    }).catch((error) => {
+        res.json(error)
+    })
+});
 
 module.exports = router;
