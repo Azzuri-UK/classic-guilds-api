@@ -18,7 +18,7 @@ router.get('/redirect',
         const token = jwt.sign({ user : body },process.env.JWT_SECRET);
         //Send back the token to the user
         res.cookie('keepers-jwt',token);
-        res.redirect('http://localhost:8080')
+        res.redirect(process.env.UI_URL)
     } // auth success
 );
 
