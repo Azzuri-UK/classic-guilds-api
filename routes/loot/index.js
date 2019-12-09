@@ -1,10 +1,13 @@
 let express = require('express');
 let router = express.Router();
-let database = require('../../bin/db');
+let database = require('../../config/db');
 
 
 router.get('/', function (req, res) {
-    database.query("SELECT * FROM LOOT").then((results) => {
+    const query = {
+        text: 'SELECT character_name,item_id,loot_type,item_name,item_quality,character_class FROM LOOT INNER JOIN roster r on loot.character_id = r.character_id INNER JOIN items i on loot.loot_id = i.item_id INNER JOIN raids ra on loot.raid_id = ra.raid_id ORDER BY ra.raid_date DESC,ra.raid_start DESC'
+    };
+    database.query(query).then((results) => {
        res.json(results.rows)
     }).catch((error) => {
         res.json({})
@@ -20,7 +23,7 @@ router.post('/', function (req, res) {
     };
 
     database.query(query).then((results) => {
-        console.log(results)
+        res.json({success:true})
     }).catch((error) => {
         res.json({})
     })
@@ -28,13 +31,14 @@ router.post('/', function (req, res) {
 });
 
 router.get('/recent', function (req, res) {
-    database.query("SELECT character_name,loot_id,loot_type,item_name,character_class FROM LOOT INNER JOIN roster r on loot.character_id = r.character_id INNER JOIN items i on loot.loot_id = i.item_id LIMIT 20").then((results) => {
+    database.query("SELECT character_name,loot_id,loot_type,item_name,character_class FROM LOOT INNER JOIN roster r on loot.character_id = r.character_id INNER JOIN items i on loot.loot_id = i.item_id INNER JOIN raids ra on loot.raid_id = ra.raid_id ORDER BY ra.raid_date DESC,ra.raid_start DESC LIMIT 20").then((results) => {
         res.json(results.rows)
     }).catch((error) => {
         res.json({})
     })
 
 });
+
 
 
 module.exports = router;

@@ -1,6 +1,7 @@
 let express = require('express');
 let router = express.Router();
-let database = require('../../bin/db');
+let database = require('../../config/db');
+let ucfirst = require('ucfirst');
 
 router.get('/', function (req, res) {
     database.query("SELECT * FROM ROSTER").then((results) => {
@@ -10,7 +11,20 @@ router.get('/', function (req, res) {
     })
 });
 
-router.get('/:userId', function (req, res) {
+router.get('/:role(tank|healer|damage)', function (req, res) {
+    const query = {
+        text: "SELECT * FROM roster WHERE character_role = $1 ORDER BY character_name",
+        values: [ucfirst(req.params.role)],
+    };
+    database.query(query).then((results) => {
+        res.json(results.rows)
+    }).catch((error) => {
+        res.json({})
+    })
+});
+
+
+router.get('/:userId(\\d+)', function (req, res) {
     const query = {
         text: 'SELECT * FROM roster WHERE character_id = $1',
         values: [req.params.userId],
@@ -26,10 +40,10 @@ router.get('/:userId', function (req, res) {
 router.post('/', function (req, res) {
     const query = {
         text: 'INSERT INTO roster (character_name,character_class,character_role) VALUES ($1,$2,$3)',
-        values: [req.params.character_name,req.params.character_class,req.params.character_role],
+        values: [req.body.data.name,req.body.data.class,req.body.data.role],
     };
     database.query(query).then((results) => {
-        res.json(results.rows)
+        res.json({success:true})
     }).catch((error) => {
         res.json(error)
     });
@@ -41,7 +55,7 @@ router.put('/:id', function (req, res) {
         values: [req.params.character_name,req.params.character_class,req.params.character_role,req.params.id]
     };
     database.query(query).then((results) => {
-        res.json(results.rows)
+        res.json({success:true})
     }).catch((error) => {
         res.json(error)
     });
@@ -53,7 +67,7 @@ router.delete('/:id', function (req, res) {
         values: [req.params.id],
     };
     database.query(query).then((results) => {
-        res.json(results.rows)
+        res.json({success:true})
     }).catch((error) => {
         res.json(error)
     });
