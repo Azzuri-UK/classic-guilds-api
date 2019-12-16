@@ -63,6 +63,7 @@ passport.use(new DiscordStrategy({
 
                                     })
                                 } else {
+                                    console.log(member.highestRole.name);
 
                                 }
                             });

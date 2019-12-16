@@ -45,7 +45,6 @@ router.post('/crafter', function (req, res) {
         text: 'INSERT INTO crafters (character_id, recipe_id) VALUES ($1,$2)',
         values: [req.body.data.character,req.body.data.recipe]
     };
-    console.log(req.body);
     database.query(query).then((results) => {
         res.json({success:true})
     }).catch((error) => {
