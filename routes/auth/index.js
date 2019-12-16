@@ -17,7 +17,7 @@ router.get('/redirect',
         //Sign the JWT token and populate the payload with the user email and id
         const token = jwt.sign({ user : body },process.env.JWT_SECRET);
         //Send back the token to the user
-        res.cookie('keepers-jwt',token);
+        res.cookie('keepers-jwt',token,{domain: 'keepers-guild.com' });
         res.redirect(process.env.UI_URL)
     } // auth success
 );
