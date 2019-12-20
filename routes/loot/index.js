@@ -19,7 +19,7 @@ router.post('/', function (req, res) {
 
     const query = {
         text: 'INSERT INTO loot (character_id, raid_id, loot_id, loot_type) VALUES ($1,$2,$3,$4)',
-        values: [req.params.character_id,req.params.raid_id,req.params.loot_id,req.params.loot_type]
+        values: [req.sanitize(req.params.character_id),req.sanitize(req.params.raid_id),req.sanitize(req.params.loot_id),req.sanitize(req.params.loot_type)]
     };
 
     database.query(query).then((results) => {

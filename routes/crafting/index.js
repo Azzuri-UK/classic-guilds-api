@@ -28,7 +28,7 @@ router.post('/recipe', function (req, res) {
 
     const query = {
         text: 'INSERT INTO recipes (recipe, profession, item_id, item_quality) VALUES ($1,$2,$3,$4)',
-        values: [req.body.data.name,req.body.data.profession,req.body.data.itemId,req.body.data.quality]
+        values: [req.sanitize(req.body.data.name),req.sanitize(req.body.data.profession),req.sanitize(req.body.data.itemId),req.sanitize(req.body.data.quality)]
     };
 
     database.query(query).then((results) => {
@@ -43,7 +43,7 @@ router.post('/recipe', function (req, res) {
 router.post('/crafter', function (req, res) {
     const query = {
         text: 'INSERT INTO crafters (character_id, recipe_id) VALUES ($1,$2)',
-        values: [req.body.data.character,req.body.data.recipe]
+        values: [req.sanitize(req.body.data.character),req.sanitize(req.body.data.recipe)]
     };
     database.query(query).then((results) => {
         res.json({success:true})

@@ -5,9 +5,13 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const passport = require('passport');
 const passportSetup = require('./config/passport');
+const expressSanitizer = require('express-sanitizer');
+
 let indexRouter = require('./routes/index');
 
 let app = express();
+
+app.use(expressSanitizer());
 
 app.use(cookieParser());
 

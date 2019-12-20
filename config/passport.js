@@ -46,7 +46,7 @@ passport.use(new DiscordStrategy({
 
                             guild.fetchMember(profile.id).then(async member => {
                                 if (roles.includes(member.highestRole.name)) {
-                                    let role = member.highestRole.name.replace(' ', '').toUpperCase()
+                                    let role = member.highestRole.name.replace(' ', '').toUpperCase();
                                     let query = {
                                         text: "INSERT INTO users (discordid,username,role) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING",
                                         values: [user.id, user.userName, role]
