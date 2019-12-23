@@ -24,6 +24,7 @@ passport.use(new DiscordStrategy({
         scope: scopes
     },
     (accessToken, refreshToken, profile, done) => {
+    console.log ('ID: ' + profile.id + ' :: User ' + profile.username );
         const keepersServer = profile.guilds.find(guild => guild.id === '616366281540763687');
         if (keepersServer) {
             let user = {
