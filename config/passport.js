@@ -24,8 +24,6 @@ passport.use(new DiscordStrategy({
         scope: scopes
     },
     (accessToken, refreshToken, profile, done) => {
-
-        console.log(profile);
         const keepersServer = profile.guilds.find(guild => guild.id === '616366281540763687');
         if (keepersServer) {
             let user = {
@@ -42,8 +40,6 @@ passport.use(new DiscordStrategy({
                 } else {
                     client.login(process.env.DISCORD_TOKEN).then(() => {
                         let guild = client.guilds.get('616366281540763687');
-
-
                             guild.fetchMember(profile.id).then(async member => {
                                 if (roles.includes(member.highestRole.name)) {
                                     let role = member.highestRole.name.replace(' ', '').toUpperCase();
@@ -55,26 +51,40 @@ passport.use(new DiscordStrategy({
                                     query = {
                                         text: "SELECT id,username,role FROM users WHERE discordid = $1",
                                         values: [user.id]
-                                    }
+                                    };
                                     database.query(query).then((results) => {
                                         return done(null, results.rows[0]);
                                     }).catch((error) => {
-                                        console.log(error.message);
+                                        console.log(profile);
+                                        client.destroy();
+                                        return done(null, false, {message: 'Failed to save user details'});
 
                                     })
                                 } else {
-                                    console.log(member.highestRole.name);
-
+                                    console.log(profile);
+                                    client.destroy();
+                                    return done(null, false, {message: 'You do not have a valid discord role'});
                                 }
-                            });
-                    });
+                            }).catch((error)=>{
+                                console.log(profile);
+                                client.destroy();
+                                return done(null, false, {message: 'Error fetching discord user'});
+                            })
+                    }).catch((error) => {
+                        client.destroy();
+                        return done(null, false, {message: 'Error querying Keepers Discord bot'});
+                    })
                 }
             }).catch((error) => {
-                console.log(error.message);
+                console.log(profile);
+
+                return done(null, false, {message: 'Error querying database.  0001'});
 
             })
 
         } else {
+            console.log(profile);
+
             return done(null, false, {message: 'You must be a Keeper to use this site'});
         }
 
