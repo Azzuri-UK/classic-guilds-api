@@ -226,9 +226,10 @@ router.post('/:id/attendance/import', function (req, res) {
     if (characters.length > 0) {
         let promises = []
         characters.forEach((character) => {
+            let char = character.split(" ");
             const query = {
                 text: 'INSERT INTO attendance (character_id,role,raid_id) SELECT r.character_id,r.character_role,$1 FROM (SELECT character_id,character_role FROM roster WHERE character_name = $2) r ON CONFLICT DO NOTHING',
-                values: [req.sanitize(req.params.id), character]
+                values: [req.sanitize(req.params.id), char[0]]
             };
 
             promises.push(database.query(query))
