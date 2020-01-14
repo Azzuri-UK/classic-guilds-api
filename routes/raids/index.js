@@ -207,6 +207,8 @@ router.post('/:id/loot', function (req, res) {
     });
 });
 
+
+
 router.delete('/:id/loot', function (req, res) {
     const query = {
         text: 'DELETE FROM loot WHERE loot_id=$1 and character_id=$2 AND raid_id=$3',
