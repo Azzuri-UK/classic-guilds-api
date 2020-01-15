@@ -53,6 +53,33 @@ router.get('/open/', function (req, res) {
     })
 });
 
+router.get('/upcoming/', function (req, res) {
+    const query = {
+        text: 'SELECT *,\n' +
+            '       (SELECT COUNT(*)\n' +
+            '        FROM public.attendance\n' +
+            '                 INNER JOIN roster r on attendance.character_id = r.character_id\n' +
+            '        WHERE attendance.raid_id = raids.raid_id AND r.character_role=\'Tank\' ) as tank_count,\n' +
+            '       (SELECT COUNT(*)\n' +
+            '        FROM public.attendance\n' +
+            '                 INNER JOIN roster r on attendance.character_id = r.character_id\n' +
+            '        WHERE attendance.raid_id = raids.raid_id AND r.character_role=\'Healer\' ) as healer_count,\n' +
+            '       (SELECT COUNT(*)\n' +
+            '        FROM public.attendance\n' +
+            '                 INNER JOIN roster r on attendance.character_id = r.character_id\n' +
+            '        WHERE attendance.raid_id = raids.raid_id AND r.character_role=\'Damage\' ) as damage_count\n' +
+            'FROM raids\n' +
+            'WHERE raid_status = 1\n' +
+            'AND raid_date >= CURRENT_DATE\n' +
+            'ORDER BY raid_date DESC'
+    };
+    database.query(query).then((results) => {
+        res.json(results.rows)
+    }).catch((error) => {
+        res.json({})
+    })
+});
+
 router.get('/closed/', function (req, res) {
     const query = {
         text: 'SELECT *,\n' +
