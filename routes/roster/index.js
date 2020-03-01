@@ -13,7 +13,7 @@ router.get('/', function (req, res) {
 
 router.get('/:role(tank|healer|damage)', function (req, res) {
     const query = {
-        text: "SELECT * FROM roster WHERE character_role = $1 ORDER BY character_name",
+        text: "SELECT * FROM roster WHERE character_role = $1 AND character_status = 1 ORDER BY character_name",
         values: [ucfirst(req.params.role)],
     };
     database.query(query).then((results) => {
