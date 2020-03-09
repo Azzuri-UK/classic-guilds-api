@@ -9,6 +9,7 @@ const roles = [
     'Arch Keepers',
     'Keepers',
     'Keepers Council',
+    'Class Leader'
 ];
 passport.serializeUser(function (user, done) {
     done(null, user);
