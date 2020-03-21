@@ -7,8 +7,8 @@ const client = new Discord.Client();
 
 const roles = [
     'Officer',
-    'Raider',
-    'Member',
+    'Raiders',
+    'Members',
     'Class Leader'
 ];
 passport.serializeUser(function (user, done) {
