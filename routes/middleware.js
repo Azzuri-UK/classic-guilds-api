@@ -20,7 +20,7 @@ let checkToken = (req, res, next) => {
                 });
             } else {
                 if (req.method === "POST" || req.method === "PUT" || req.method === "DELETE")  {
-                    if (decoded.user.role === "OFFICERS"){
+                    if (decoded.user.role === "OFFICER"){
                         req.decoded = decoded;
                         next();
                     } else {
