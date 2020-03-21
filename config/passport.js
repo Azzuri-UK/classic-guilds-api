@@ -6,9 +6,9 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 
 const roles = [
-    'Arch Keepers',
-    'Keepers',
-    'Keepers Council',
+    'Officer',
+    'Raider',
+    'Member',
     'Class Leader'
 ];
 passport.serializeUser(function (user, done) {
@@ -26,7 +26,7 @@ passport.use(new DiscordStrategy({
     },
     (accessToken, refreshToken, profile, done) => {
     console.log ('ID: ' + profile.id + ' :: User ' + profile.username );
-        const keepersServer = profile.guilds.find(guild => guild.id === '616366281540763687');
+        const keepersServer = profile.guilds.find(guild => guild.id === '637801881137053716');
         if (keepersServer) {
             let user = {
                 id: profile.id,
@@ -87,7 +87,7 @@ passport.use(new DiscordStrategy({
         } else {
             console.log(profile);
 
-            return done(null, false, {message: 'You must be a Keeper to use this site'});
+            return done(null, false, {message: 'Entry costs 5g'});
         }
 
     })
