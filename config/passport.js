@@ -41,7 +41,7 @@ passport.use(new DiscordStrategy({
                     return done(null, results.rows[0]);
                 } else {
                     client.login(process.env.DISCORD_TOKEN).then(() => {
-                        let guild = client.guilds.get('616366281540763687');
+                        let guild = client.guilds.get('637801881137053716');
                             guild.fetchMember(profile.id).then(async member => {
                                 if (roles.includes(member.highestRole.name)) {
                                     let role = member.highestRole.name.replace(' ', '').toUpperCase();
@@ -73,8 +73,9 @@ passport.use(new DiscordStrategy({
                                 return done(null, false, {message: 'Error fetching discord user'});
                             })
                     }).catch((error) => {
+                        console.log(error.message);
                         client.destroy();
-                        return done(null, false, {message: 'Error querying Keepers Discord bot'});
+                        return done(null, false, {message: 'Error querying Five Gold Discord bot'});
                     })
                 }
             }).catch((error) => {
