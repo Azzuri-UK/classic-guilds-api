@@ -20,7 +20,7 @@ router.post('/', function (req, res) {
     let gold = 0;
     let copper = 0;
     let silver = 0;
-    let bankItems = [];
+    let bankItems = {};
     data.forEach((row, index) => {
         let rowData = row.replace('[', '').replace(']', '').split(',')
 
@@ -33,11 +33,13 @@ router.post('/', function (req, res) {
             case 1:
                 break;
             default:
-                if (rowData.length === 4 )
-                bankItems.push({
-                    id: rowData[2],
-                    quantity: rowData[3]
-                })
+                if (rowData.length === 4 ) {
+                    if (bankItems.hasOwnProperty(rowData[2])) {
+                        bankItems[rowData[2]] += parseInt(rowData[3])
+                    } else {
+                        bankItems[rowData[2]] = parseInt(rowData[3])
+                    }
+                }
         }
     });
     let promises = [];
@@ -46,10 +48,10 @@ router.post('/', function (req, res) {
         text: 'DELETE FROM guild_bank_items',
     };
     database.query(deleteQuery).then((deleteResults) => {
-        bankItems.forEach(item => {
+        Object.keys(bankItems).forEach(function(key) {
             let query = {
                 text: 'INSERT INTO guild_bank_items (item_id,quantity) VALUES ($1,$2)',
-                values: [req.sanitize(item.id), req.sanitize(item.quantity)],
+                values: [req.sanitize(key), req.sanitize(bankItems[key])],
             };
             promises.push(database.query(query))
         });
