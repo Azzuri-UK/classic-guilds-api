@@ -223,8 +223,8 @@ router.get('/:id/loot', function (req, res) {
 
 router.post('/:id/loot', function (req, res) {
     let notes;
-    if (req.params.notes) {
-        notes = req.sanitize(req.params.notes)
+    if (req.body.data.notes) {
+        notes = req.sanitize(req.body.data.notes)
     } else {
         notes = ''
     }
