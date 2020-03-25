@@ -25,10 +25,15 @@ router.get('/', function (req, res) {
 });
 
 router.post('/', function (req, res) {
-
+    let notes;
+        if (req.params.loot_type){
+            notes = req.sanitize(req.params.loot_type)
+        } else {
+            notes = ''
+        }
     const query = {
-        text: 'INSERT INTO loot (character_id, raid_id, loot_id, loot_type) VALUES ($1,$2,$3,$4)',
-        values: [req.sanitize(req.params.character_id),req.sanitize(req.params.raid_id),req.sanitize(req.params.loot_id),req.sanitize(req.params.loot_type)]
+        text: 'INSERT INTO loot (character_id, raid_id, loot_id, loot_type,notes) VALUES ($1,$2,$3,$4)',
+        values: [req.sanitize(req.params.character_id),req.sanitize(req.params.raid_id),req.sanitize(req.params.loot_id),notes]
     };
 
     database.query(query).then((results) => {
