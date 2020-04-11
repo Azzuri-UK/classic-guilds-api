@@ -1,6 +1,7 @@
 let express = require('express');
 let router = express.Router();
 let database = require('../../config/db');
+let audit = require('../../config/audit');
 
 router.get('/', function (req, res) {
     const query = {
@@ -211,7 +212,7 @@ router.delete('/:id/attendance/:character', function (req, res) {
 
 router.get('/:id/loot', function (req, res) {
     const query = {
-        text: 'SELECT character_name,character_class,r.character_id,loot_type,item_id,item_name,item_quality,loot_subcategory FROM loot INNER JOIN roster r on loot.character_id = r.character_id INNER JOIN items i on loot.loot_id = i.item_id WHERE raid_id = $1 ORDER BY character_name',
+        text: 'SELECT character_name,character_class,r.character_id,loot_type,item_id,item_name,item_quality,loot_subcategory,loot.id FROM loot INNER JOIN roster r on loot.character_id = r.character_id INNER JOIN items i on loot.loot_id = i.item_id WHERE raid_id = $1 ORDER BY character_name',
         values: [req.sanitize(req.params.id)]
     };
     database.query(query).then((results) => {
@@ -222,7 +223,7 @@ router.get('/:id/loot', function (req, res) {
 });
 
 router.post('/:id/loot', function (req, res) {
-    let notes;
+    let notes;;
     if (req.body.data.notes) {
         notes = req.sanitize(req.body.data.notes)
     } else {
@@ -236,10 +237,35 @@ router.post('/:id/loot', function (req, res) {
     }
     const query = {
         text: 'INSERT INTO loot (character_id, raid_id, loot_id, loot_type,loot_subcategory,notes) VALUES ($1,$2,$3,$4,$5,$6)',
-        values: [charId, req.sanitize(req.params.id), req.sanitize(req.body.data.item_id), req.sanitize(req.body.data.loot_type), req.sanitize(req.body.data.loot_subtype),notes]
+        values: [charId, req.sanitize(req.params.id), req.sanitize(req.body.data.item_id), req.sanitize(req.body.data.loot_type), req.sanitize(req.body.data.loot_subcategory),notes]
     };
 
-    database.query(query).then((results) => {
+    database.query(query).then( async (results) => {
+        await audit.writeAuditEvent(req.decoded.user.id,req.body.data.item_id,'ADD',null,req.sanitize(req.body.data.loot_subcategory),null,new Date(),req.sanitize(req.body.data.character_id));
+        res.json({success: true})
+    }).catch((error) => {
+        res.json(error.message);
+    });
+});
+
+router.put('/:id/loot/:lootId', async function (req, res) {
+    const query = {
+        text: 'SELECT * from loot where loot.id = $1',
+        values: [req.sanitize(req.params.lootId)]
+    };
+    let oldValues;
+    await database.query(query).then((results) => {
+        oldValues = results.rows[0];
+    }).catch((error) => {
+        res.json(error.message);
+    });
+    const editQuery = {
+        text: 'UPDATE loot SET loot_subcategory=$1 WHERE loot.id=$2',
+        values: [req.sanitize(req.body.data.loot_subcategory),req.sanitize(req.params.lootId)]
+    };
+
+    database.query(editQuery).then( async (results) => {
+        await audit.writeAuditEvent(req.decoded.user.id,req.body.data.item_id,'EDIT',oldValues.loot_subcategory,req.sanitize(req.body.data.loot_subcategory),req.sanitize(req.body.data.reason),new Date(),req.sanitize(req.body.data.character_id));
         res.json({success: true})
     }).catch((error) => {
         res.json(error.message);
@@ -250,11 +276,12 @@ router.post('/:id/loot', function (req, res) {
 
 router.delete('/:id/loot', function (req, res) {
     const query = {
-        text: 'DELETE FROM loot WHERE loot_id=$1 and character_id=$2 AND raid_id=$3',
-        values: [req.sanitize(req.body.item_id), req.sanitize(req.body.character_id), req.sanitize(req.params.id)]
+        text: 'DELETE FROM loot WHERE id=$1',
+        values: [req.sanitize(req.body.id)]
     };
 
-    database.query(query).then((results) => {
+    database.query(query).then(async (results) => {
+        await audit.writeAuditEvent(req.decoded.user.id,req.body.item_id,'DELETE',null,null,req.sanitize(req.body.reason),new Date(),req.sanitize(req.body.character_id));
         res.json({success: true})
     }).catch((error) => {
         res.json(error.message);
