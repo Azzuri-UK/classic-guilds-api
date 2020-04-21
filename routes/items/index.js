@@ -16,7 +16,7 @@ router.get('/', function (req, res) {
 
 router.get('/:zone', function (req, res) {
     const query = {
-        text: 'SELECT * FROM items WHERE item_zone = $1 ORDER BY item_boss,item_name ASC',
+        text: 'SELECT * FROM items WHERE item_zone = $1 ORDER BY item_name ASC',
         values: [req.params.zone],
     };
 

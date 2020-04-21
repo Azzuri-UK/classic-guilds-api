@@ -4,7 +4,7 @@ let database = require('../../config/db');
 let ucfirst = require('ucfirst');
 
 router.get('/', function (req, res) {
-    database.query("SELECT * FROM ROSTER WHERE character_status = 1").then((results) => {
+    database.query("SELECT * FROM ROSTER WHERE character_status = 1 ORDER BY character_name").then((results) => {
         res.json(results.rows)
     }).catch((error) => {
         res.json({})

@@ -64,7 +64,7 @@ passport.use(new DiscordStrategy({
                                     })
                                 } else {
                                     console.log(profile);
-                                    client.destroy();
+                                    await client.destroy();
                                     return done(null, false, {message: 'You do not have a valid discord role'});
                                 }
                             }).catch((error)=>{

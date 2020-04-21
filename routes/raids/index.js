@@ -289,26 +289,59 @@ router.delete('/:id/loot', function (req, res) {
 });
 
 router.post('/:id/attendance/import', function (req, res) {
-    let characters = req.body.data.split(";");
+    let promises = [];
+    let characters = [];
     let success = true;
-    if (characters.length > 0) {
-        let promises = []
-        characters.forEach((character) => {
-            let char = character.split(" ");
-            const query = {
-                text: 'INSERT INTO attendance (character_id,role,raid_id) SELECT r.character_id,r.character_role,$1 FROM (SELECT character_id,character_role FROM roster WHERE character_name = $2) r ON CONFLICT DO NOTHING',
-                values: [req.sanitize(req.params.id), char[0]]
-            };
+    switch (req.body.mode){
+        case 'CSV':
+            characters = req.body.import.split(",");
+            if (characters.length > 0) {
+                characters.forEach((character) => {
+                    const query = {
+                        text: 'INSERT INTO attendance (character_id,role,raid_id) SELECT r.character_id,r.character_role,$1 FROM (SELECT character_id,character_role FROM roster WHERE character_name = $2) r ON CONFLICT DO NOTHING',
+                        values: [req.sanitize(req.params.id), character]
+                    };
 
-            promises.push(database.query(query))
-        });
-        Promise.all(promises).then(result => {
-            res.json({success: true})
-        }).catch(error => {
-            res.json({success: false})
-        });
+                    promises.push(database.query(query))
+                });
+            }
+            break;
+        case 'ATGC':
+            characters = req.body.import.split(";");
+            if (characters.length > 0) {
+                characters.forEach((character) => {
+                    let char = character.split(" ");
+                    const query = {
+                        text: 'INSERT INTO attendance (character_id,role,raid_id) SELECT r.character_id,r.character_role,$1 FROM (SELECT character_id,character_role FROM roster WHERE character_name = $2) r ON CONFLICT DO NOTHING',
+                        values: [req.sanitize(req.params.id), char[0]]
+                    };
 
+                    promises.push(database.query(query))
+                });
+            }
+            break;
+        case 'MRT':
+            let data = req.body.import.split('\n');
+            console.log(data);
+            characters = data[3].split(",");
+            if (characters.length > 0) {
+                characters.forEach((character) => {
+                    const query = {
+                        text: 'INSERT INTO attendance (character_id,role,raid_id) SELECT r.character_id,r.character_role,$1 FROM (SELECT character_id,character_role FROM roster WHERE character_name = $2) r ON CONFLICT DO NOTHING',
+                        values: [req.sanitize(req.params.id), character.trim()]
+                    };
+
+                    promises.push(database.query(query))
+                });
+            }
+            break;
     }
+    Promise.all(promises).then(result => {
+        res.json({success: true})
+    }).catch(error => {
+        res.json({success: false})
+    });
+
 });
 
 router.put('/:id/close', function (req, res) {
