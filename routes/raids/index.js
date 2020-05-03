@@ -223,25 +223,26 @@ router.get('/:id/loot', function (req, res) {
 });
 
 router.post('/:id/loot', function (req, res) {
-    let notes;;
+    let notes;
+    ;
     if (req.body.data.notes) {
         notes = req.sanitize(req.body.data.notes)
     } else {
         notes = ''
     }
     let charId;
-    if (req.body.data.disenchant === true){
+    if (req.body.data.disenchant === true) {
         charId = 3020
     } else {
         charId = req.sanitize(req.body.data.character_id)
     }
     const query = {
         text: 'INSERT INTO loot (character_id, raid_id, loot_id, loot_type,loot_subcategory,notes) VALUES ($1,$2,$3,$4,$5,$6)',
-        values: [charId, req.sanitize(req.params.id), req.sanitize(req.body.data.item_id), req.sanitize(req.body.data.loot_type), req.sanitize(req.body.data.loot_subcategory),notes]
+        values: [charId, req.sanitize(req.params.id), req.sanitize(req.body.data.item_id), req.sanitize(req.body.data.loot_type), req.sanitize(req.body.data.loot_subcategory), notes]
     };
 
-    database.query(query).then( async (results) => {
-        await audit.writeAuditEvent(req.decoded.user.id,req.body.data.item_id,'ADD',null,req.sanitize(req.body.data.loot_subcategory),null,new Date(),req.sanitize(req.body.data.character_id));
+    database.query(query).then(async (results) => {
+        await audit.writeAuditEvent(req.decoded.user.id, req.body.data.item_id, 'ADD', null, req.sanitize(req.body.data.loot_subcategory), null, new Date(), req.sanitize(req.body.data.character_id));
         res.json({success: true})
     }).catch((error) => {
         res.json(error.message);
@@ -261,17 +262,16 @@ router.put('/:id/loot/:lootId', async function (req, res) {
     });
     const editQuery = {
         text: 'UPDATE loot SET loot_subcategory=$1 WHERE loot.id=$2',
-        values: [req.sanitize(req.body.data.loot_subcategory),req.sanitize(req.params.lootId)]
+        values: [req.sanitize(req.body.data.loot_subcategory), req.sanitize(req.params.lootId)]
     };
 
-    database.query(editQuery).then( async (results) => {
-        await audit.writeAuditEvent(req.decoded.user.id,req.body.data.item_id,'EDIT',oldValues.loot_subcategory,req.sanitize(req.body.data.loot_subcategory),req.sanitize(req.body.data.reason),new Date(),req.sanitize(req.body.data.character_id));
+    database.query(editQuery).then(async (results) => {
+        await audit.writeAuditEvent(req.decoded.user.id, req.body.data.item_id, 'EDIT', oldValues.loot_subcategory, req.sanitize(req.body.data.loot_subcategory), req.sanitize(req.body.data.reason), new Date(), req.sanitize(req.body.data.character_id));
         res.json({success: true})
     }).catch((error) => {
         res.json(error.message);
     });
 });
-
 
 
 router.delete('/:id/loot', function (req, res) {
@@ -281,7 +281,7 @@ router.delete('/:id/loot', function (req, res) {
     };
 
     database.query(query).then(async (results) => {
-        await audit.writeAuditEvent(req.decoded.user.id,req.body.item_id,'DELETE',null,null,req.sanitize(req.body.reason),new Date(),req.sanitize(req.body.character_id));
+        await audit.writeAuditEvent(req.decoded.user.id, req.body.item_id, 'DELETE', null, null, req.sanitize(req.body.reason), new Date(), req.sanitize(req.body.character_id));
         res.json({success: true})
     }).catch((error) => {
         res.json(error.message);
@@ -292,7 +292,7 @@ router.post('/:id/attendance/import', function (req, res) {
     let promises = [];
     let characters = [];
     let success = true;
-    switch (req.body.mode){
+    switch (req.body.mode) {
         case 'CSV':
             characters = req.body.import.split(",");
             if (characters.length > 0) {
@@ -322,7 +322,6 @@ router.post('/:id/attendance/import', function (req, res) {
             break;
         case 'MRT':
             let data = req.body.import.split('\n');
-            console.log(data);
             characters = data[3].split(",");
             if (characters.length > 0) {
                 characters.forEach((character) => {
@@ -356,4 +355,91 @@ router.put('/:id/close', function (req, res) {
         res.json(error.message);
     });
 });
+
+router.post('/:id/loot/import', async function (req, res) {
+    let data = req.body.data.split('\n');
+    let promises = [];
+
+    const raidQuery = {
+        text: 'SELECT raid_zone FROM raids WHERE raid_id = $1',
+        values: [req.sanitize(req.params.id)]
+    };
+
+    let raidResults = await database.query(raidQuery);
+    if (raidResults.rows.length > 0) {
+        let raidZone = getRaidZone(raidResults.rows[0].raid_zone);
+
+        data.forEach((loot, index) => {
+            if (index > 0) {
+                let line = loot.split('\t');
+               if (line[9] === raidZone) {
+                   let name = line[0].split('-')[0];
+                   const query = {
+                       text: 'SELECT character_id FROM roster WHERE character_name = $1',
+                       values: [name]
+                   };
+                   database.query(query).then((results) => {
+                       if (results.rows.length > 0) {
+                           let characterId = results.rows[0].character_id;
+                           if (characterId) {
+                               let itemId = line[4];
+                               let lootType = 3;
+                               let lootSubType = 0;
+                               switch (line[6]) {
+                                   case 'Mainspec/Need':
+                                       lootSubType = 1;
+                                       break;
+                                   case 'Minor Upgrade':
+                                       lootSubType = 2;
+                                       break;
+                                   case 'Resist':
+                                       lootSubType = 4;
+                                       break;
+                                   case 'Offspec/Other':
+                                       lootSubType = 3;
+                                       break;
+                                   case 'Disenchant':
+                                       characterId = 3020;
+                                       lootSubType = 5;
+                                       break;
+                                   default:
+                               }
+                               const importQuery = {
+                                   text: 'INSERT into loot (character_id,raid_id,loot_id,loot_type,loot_subcategory) VALUES ($1,$2,$3,$4,$5)',
+                                   values: [characterId, req.sanitize(req.params.id), itemId, lootType, lootSubType]
+                               };
+                               promises.push(database.query(importQuery));
+                           }
+                       }
+
+                   }).catch((error) => {
+                       console.log(error.message);
+                   });
+               }
+            }
+        });
+        Promise.all(promises).then(result => {
+            res.json({success: true})
+        }).catch(error => {
+            console.log(error);
+            res.json({success: false})
+        });
+    } else {
+        res.json({success: false})
+    }
+
+});
+
+getRaidZone = (zone) => {
+    switch (zone) {
+        case "ZG":
+            return 'Zul\'Gurub-20 Player';
+        case 'MC':
+            return 'Molten Core-40 Player';
+        case 'ONY':
+            return 'Onyxia\'s Lair-40 Player';
+        case 'BWL':
+            return 'Blackwing Lair-40 Player';
+    }
+};
 module.exports = router;
