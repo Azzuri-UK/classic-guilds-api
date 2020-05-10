@@ -133,6 +133,8 @@ router.get('/epgp', async function (req, res) {
             if (gearPoints < 30){
                 gearPoints = 30;
             }
+            effortPoints = (effortPoints / 100) * 40
+            gearPoints = (gearPoints / 100) * 40
             result.effort_points = effortPoints;
             result.gear_points = gearPoints;
             result.priority = (effortPoints / gearPoints).toFixed(2)
