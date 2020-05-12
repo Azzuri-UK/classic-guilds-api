@@ -80,7 +80,7 @@ router.delete('/:id', function (req, res) {
 });
 
 router.get('/epgp', async function (req, res) {
-    database.query("SELECT DISTINCT character_name,character_id FROM ROSTER WHERE character_status = 1 ORDER BY character_name").then(async (results) => {
+    database.query("SELECT DISTINCT character_name,* FROM ROSTER WHERE character_status = 1 ORDER BY character_name").then(async (results) => {
         let raidScores = {
             'BWL': 78,
             'MC': 53,
