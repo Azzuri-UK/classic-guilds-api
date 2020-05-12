@@ -80,7 +80,7 @@ router.delete('/:id', function (req, res) {
 });
 
 router.get('/epgp', async function (req, res) {
-    database.query("SELECT * FROM ROSTER WHERE character_status = 1 ORDER BY character_name").then(async (results) => {
+    database.query("SELECT DISTINCT character_name,character_id FROM ROSTER WHERE character_status = 1 ORDER BY character_name").then(async (results) => {
         let raidScores = {
             'BWL': 78,
             'MC': 53,
@@ -91,52 +91,61 @@ router.get('/epgp', async function (req, res) {
             let effortPoints = 0;
             let gearPoints = 0;
             let raidsQuery = {
-                text: 'SELECT raid_zone FROM attendance INNER JOIN raids on attendance.raid_id = raids.raid_id WHERE character_id =$1',
+                text: 'SELECT raid_zone,raids.raid_id FROM attendance INNER JOIN raids on attendance.raid_id = raids.raid_id WHERE character_id =$1 ORDER BY raid_date',
                 values: [result.character_id],
             };
             let raids = await database.query(raidsQuery)
-            raids.rows.forEach(raid => {
-                effortPoints += raidScores[raid.raid_zone];
-            })
-            let lootQuery = {
-                text: 'SELECT items.item_gp,loot_type,loot_subcategory FROM loot INNER JOIN items ON loot.loot_id = items.item_id WHERE character_id = $1',
-                values: [result.character_id],
-            };
-
-            let loot = await database.query(lootQuery)
-
-            loot.rows.forEach(item => {
-                switch (item.loot_type) {
-                    case 1:
-                        gearPoints += item.item_gp;
-                        break;
-                    case 2:
-                        break;
-                    case 3:
-                        switch (item.loot_subcategory) {
-                            case 1:
-                                gearPoints += item.item_gp;
-                                break;
-                            case 2:
-                                gearPoints += ((25 / 100) * item.item_gp);
-                                break;
-                            case 3:
-                            case 4:
-                            case 5:
-                                // do nothing;
-                                break;
-
-                        }
-                        break
+            for (const raid of raids.rows) {
+                if (raid.raid_zone === 'BWL') {
+                    if (effortPoints > 0) {
+                        effortPoints = (effortPoints - (effortPoints * 0.10))
+                    }
+                    if (gearPoints > 30) {
+                        gearPoints = (gearPoints - (gearPoints * 0.10))
+                    }
                 }
-            })
-            if (gearPoints < 30){
+                effortPoints += raidScores[raid.raid_zone]
+                let lootQuery = {
+                    text: 'SELECT items.item_gp,loot_type,loot_subcategory FROM loot INNER JOIN items ON loot.loot_id = items.item_id WHERE character_id = $1 AND raid_id= $2',
+                    values: [result.character_id, raid.raid_id]
+                };
+
+                let loot = await database.query(lootQuery)
+
+                for (const lootItem of loot.rows) {
+                    switch (lootItem.loot_type) {
+                        case 1:
+                            gearPoints += lootItem.item_gp;
+                            break;
+                        case 2:
+                            break;
+                        case 3:
+                            switch (lootItem.loot_subcategory) {
+                                case 1:
+                                    gearPoints += lootItem.item_gp;
+                                    break;
+                                case 2:
+                                    gearPoints += ((25 / 100) * lootItem.item_gp);
+                                    break;
+                                case 3:
+                                case 4:
+                                case 5:
+                                    // do nothing;
+                                    break;
+
+                            }
+                            break
+                    }
+                }
+            }
+            if (gearPoints < 30) {
                 gearPoints = 30;
             }
             result.effort_points = effortPoints;
-            result.gear_points =  gearPoints;
+            result.gear_points = Math.round(gearPoints);
             result.priority = (effortPoints / gearPoints).toFixed(2)
         }
+        console.log('done' )
         res.json(results.rows)
     }).catch((error) => {
         res.json(error)
