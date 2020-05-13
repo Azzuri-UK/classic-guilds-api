@@ -87,45 +87,56 @@ router.get('/epgp', async function (req, res) {
             'ZG': 0,
             'ONY': 5
         }
+        let raidUsers = [];
         for (const result of results.rows) {
-            let effortPoints = 0;
-            let gearPoints = 0;
-            let raidsQuery = {
-                text: 'SELECT raid_zone,raids.raid_id FROM attendance INNER JOIN raids on attendance.raid_id = raids.raid_id WHERE character_id =$1 ORDER BY raid_date',
-                values: [result.character_id],
+            result.effortPoints = 0;
+            result.gearPoints = 0;
+            raidUsers[result.character_id] = result;
+        }
+
+        let raidsQuery = {
+            text: 'SELECT raid_zone,raids.raid_id FROM raids ORDER BY raid_date'
+        };
+        let raids = await database.query(raidsQuery)
+        for (const raid of raids.rows) {
+            if (raid.raid_zone === 'BWL') {
+                raidUsers.forEach((user, index) => {
+                    raidUsers[user.character_id].effortPoints = (raidUsers[user.character_id].effortPoints - (raidUsers[user.character_id].effortPoints * 0.10))
+                    raidUsers[user.character_id].gearPoints = (raidUsers[user.character_id].gearPoints - (raidUsers[user.character_id].gearPoints * 0.10))
+                })
+            }
+            let attendanceQuery = {
+                text: 'SELECT character_id FROM attendance WHERE raid_id = $1',
+                values: [raid.raid_id],
             };
-            let raids = await database.query(raidsQuery)
-            for (const raid of raids.rows) {
-                if (raid.raid_zone === 'BWL') {
-                    if (effortPoints > 0) {
-                        effortPoints = (effortPoints - (effortPoints * 0.10))
-                    }
-                    if (gearPoints > 30) {
-                        gearPoints = (gearPoints - (gearPoints * 0.10))
-                    }
+            let attendance = await database.query(attendanceQuery)
+            attendance.rows.forEach(attendee => {
+                if (attendee.character_id in raidUsers) {
+                    raidUsers[attendee.character_id].effortPoints += raidScores[raid.raid_zone]
                 }
-                effortPoints += raidScores[raid.raid_zone]
-                let lootQuery = {
-                    text: 'SELECT items.item_gp,loot_type,loot_subcategory FROM loot INNER JOIN items ON loot.loot_id = items.item_id WHERE character_id = $1 AND raid_id= $2',
-                    values: [result.character_id, raid.raid_id]
-                };
 
-                let loot = await database.query(lootQuery)
+            })
 
-                for (const lootItem of loot.rows) {
-                    switch (lootItem.loot_type) {
+            let lootQuery = {
+                text: 'SELECT items.item_gp,loot_type,loot_subcategory,character_id FROM loot INNER JOIN items ON loot.loot_id = items.item_id WHERE raid_id= $1',
+                values: [raid.raid_id],
+            };
+            let loot = await database.query(lootQuery)
+            loot.rows.forEach(item => {
+                if (item.character_id in raidUsers) {
+                    switch (item.loot_type) {
                         case 1:
-                            gearPoints += lootItem.item_gp;
+                            raidUsers[item.character_id].gearPoints += item.item_gp;
                             break;
                         case 2:
                             break;
                         case 3:
-                            switch (lootItem.loot_subcategory) {
+                            switch (item.loot_subcategory) {
                                 case 1:
-                                    gearPoints += lootItem.item_gp;
+                                    raidUsers[item.character_id].gearPoints += item.item_gp;
                                     break;
                                 case 2:
-                                    gearPoints += ((25 / 100) * lootItem.item_gp);
+                                    raidUsers[item.character_id].gearPoints += ((25 / 100) * item.item_gp);
                                     break;
                                 case 3:
                                 case 4:
@@ -137,16 +148,22 @@ router.get('/epgp', async function (req, res) {
                             break
                     }
                 }
-            }
-            if (gearPoints < 30) {
-                gearPoints = 30;
-            }
-            result.effort_points = Math.round(effortPoints);
-            result.gear_points = Math.round(gearPoints);
-            result.priority = (effortPoints / gearPoints).toFixed(2)
+
+            })
         }
-        console.log('done' )
-        res.json(results.rows)
+        let data = [];
+        raidUsers.forEach(user => {
+            if (user){
+                user.effort_points = Math.round(user.effortPoints)
+                user.gear_points = Math.round(user.gearPoints)
+                if (user.gear_points < 30) {
+                    user.gear_points = 30;
+                }
+                user.priority = (user.effort_points / user.gear_points).toFixed(2)
+                data.push(user)
+            }
+        })
+        res.json(data)
     }).catch((error) => {
         res.json(error)
     })
