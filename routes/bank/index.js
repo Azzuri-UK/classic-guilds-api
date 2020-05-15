@@ -4,22 +4,31 @@ let database = require('../../config/db');
 const Base64 = require('js-base64').Base64;
 
 
-const repItems = {
+const repNumbers = {
     11382: 200,
     11370: 5,
     17010: 200,
     17011: 200,
     17012: 75
-
 }
+
 router.get('/', function (req, res) {
-    const query = {
-        text: 'SELECT bi.item_id,bi.item_name,bi.item_quality,items.item_quality as raid_quality,quantity,bank_char,updated FROM guild_bank_items INNER JOIN bank_items bi on guild_bank_items.item_id = bi.item_id LEFT OUTER JOIN items ON guild_bank_items.item_id = items.item_id ORDER BY bi.item_name '
-    };
+    let query;
+    if (req.query.search) {
+        query = {
+            text: 'SELECT bi.item_id,bi.item_name,bi.item_quality,items.item_quality as raid_quality,quantity,bank_char,updated FROM guild_bank_items INNER JOIN bank_items bi on guild_bank_items.item_id = bi.item_id LEFT OUTER JOIN items ON guild_bank_items.item_id = items.item_id WHERE bi.item_name ILIKE $1  ORDER BY bi.item_name',
+            values: ['%' + req.sanitize(req.query.search) + '%']
+        };
+    } else {
+        query = {
+            text: 'SELECT bi.item_id,bi.item_name,bi.item_quality,items.item_quality as raid_quality,quantity,bank_char,updated FROM guild_bank_items INNER JOIN bank_items bi on guild_bank_items.item_id = bi.item_id LEFT OUTER JOIN items ON guild_bank_items.item_id = items.item_id ORDER BY bi.item_name '
+        };
+    }
+
     database.query(query).then((results) => {
         results.rows.forEach((item, index) => {
-           if  (repItems.hasOwnProperty(item.item_id)){
-               results.rows[index].rep_total = (repItems[item.item_id] * item.quantity)
+           if  (repNumbers.hasOwnProperty(item.item_id)){
+               results.rows[index].rep_total = (repNumbers[item.item_id] * item.quantity)
            }
         });
         res.json(results.rows)
