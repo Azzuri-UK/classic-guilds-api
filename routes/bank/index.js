@@ -36,7 +36,7 @@ router.post('/', function (req, res) {
     let silver = 0;
     let bankItems = {};
     let characterName = null;
-    let updateDate = new Date.now();
+    let updateDate = Date.now();
     data.forEach((row, index) => {
         let rowData = row.replace('[', '').replace(']', '').split(',')
 
