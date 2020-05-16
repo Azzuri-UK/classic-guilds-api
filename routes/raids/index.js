@@ -442,4 +442,18 @@ getRaidZone = (zone) => {
             return 'Blackwing Lair-40 Player';
     }
 };
+
+router.put('/:id/open', function (req, res) {
+    const query = {
+        text: 'UPDATE raids SET raid_status=1  WHERE raid_id=$1',
+        values: [req.sanitize(req.params.id)]
+    };
+
+    database.query(query).then((results) => {
+        res.json({success: true})
+    }).catch((error) => {
+        res.json(error.message);
+    });
+});
+
 module.exports = router;
