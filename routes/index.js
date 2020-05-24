@@ -10,7 +10,10 @@ let auth = require('./auth');
 let recruitment = require('./recruitment');
 let lists = require('./lists');
 let bank = require('./bank');
+let groups = require('./groups');
+
 let middleware = require('./middleware');
+
 router.use('/loot',middleware.checkToken,loot);
 router.use('/raids',middleware.checkToken,raids);
 router.use('/roster',middleware.checkToken,roster);
@@ -21,4 +24,5 @@ router.use('/recruitment',recruitment);
 router.use('/auth',auth);
 router.use('/lists',lists);
 router.use('/bank',bank);
+router.use('/groups',groups)
 module.exports = router;
