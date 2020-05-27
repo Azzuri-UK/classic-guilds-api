@@ -71,4 +71,30 @@ router.get('/:listId', async function (req, res) {
 
 });
 
+router.get('/:listId/items', async function (req, res) {
+    let query = {
+        text: "SELECT item_name,item_quality,items.item_id FROM priority_list_items INNER JOIN items ON priority_list_items.item_id = items.item_id where list_id = $1",
+        values: [req.sanitize(req.params.listId)]
+    };
+    database.query(query).then((results) => {
+        res.json(results.rows)
+    }).catch((error) => {
+        console.log(error.message)
+        res.json({})
+    })
+});
+
+router.get('/:listId/zones', async function (req, res) {
+
+    let query = {
+        text: "SELECT raid_zone FROM priority_lists WHERE id = $1",
+        values: [req.sanitize(req.params.listId)]
+    };
+    database.query(query).then((results) => {
+        res.json(results.rows)
+    }).catch((error) => {
+        console.log(error.message)
+        res.json({})
+    })
+});
 module.exports = router;
