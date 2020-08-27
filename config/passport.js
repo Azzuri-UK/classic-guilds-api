@@ -6,10 +6,11 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 
 const roles = [
-    'Officer',
-    'Raiders',
-    'Members',
-    'Class Leader'
+    '5 Gold = GM Team',
+    '4 Gold - Raider',
+    '3 Gold - Member',
+    '4,50 Gold - Class Leader',
+    '4,50 Gold - Raid Leader'
 ];
 passport.serializeUser(function (user, done) {
     done(null, user);
