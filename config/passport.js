@@ -6,7 +6,7 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 
 const roles = [
-    '5 Gold = GM Team',
+    '5 Gold - GM Team',
     '4 Gold - Raider',
     '3 Gold - Member',
     '4,50 Gold - Class Leader',
