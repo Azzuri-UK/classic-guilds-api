@@ -7,10 +7,10 @@ const client = new Discord.Client();
 
 const roles = [
     '5 Gold - GM Team',
-    '4 Gold - Raider',
-    '3 Gold - Member',
     '4,50 Gold - Class Leader',
-    '4,50 Gold - Raid Leader'
+    '4,50 Gold - Raid Leader',
+    '4 Gold - Raider',
+    '3 Gold - Member'
 ];
 passport.serializeUser(function (user, done) {
     done(null, user);
