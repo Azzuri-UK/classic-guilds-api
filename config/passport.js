@@ -26,7 +26,6 @@ passport.use(new DiscordStrategy({
         scope: scopes
     },
     (accessToken, refreshToken, profile, done) => {
-    console.log ('ID: ' + profile.id + ' :: User ' + profile.username );
         const keepersServer = profile.guilds.find(guild => guild.id === '637801881137053716');
         if (keepersServer) {
             let user = {
@@ -58,37 +57,28 @@ passport.use(new DiscordStrategy({
                                     database.query(query).then((results) => {
                                         return done(null, results.rows[0]);
                                     }).catch((error) => {
-                                        console.log(profile);
                                         client.destroy();
                                         return done(null, false, {message: 'Failed to save user details'});
 
                                     })
                                 } else {
-                                    console.log(profile);
                                     await client.destroy();
                                     return done(null, false, {message: 'You do not have a valid discord role'});
                                 }
                             }).catch((error)=>{
-                                console.log(profile);
                                 client.destroy();
                                 return done(null, false, {message: 'Error fetching discord user'});
                             })
                     }).catch((error) => {
-                        console.log(error.message);
                         client.destroy();
                         return done(null, false, {message: 'Error querying Five Gold Discord bot'});
                     })
                 }
             }).catch((error) => {
-                console.log(profile);
-
                 return done(null, false, {message: 'Error querying database.  0001'});
-
             })
 
         } else {
-            console.log(profile);
-
             return done(null, false, {message: 'Entry costs 5g'});
         }
 

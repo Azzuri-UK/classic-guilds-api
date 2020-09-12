@@ -10,7 +10,6 @@ function writeAuditEvent(adminUser,lootId,action,oldValue,newValue,reason,timest
 
         return true;
     }).catch((error) => {
-        console.log(error.message);
         return false;
     })
 }
