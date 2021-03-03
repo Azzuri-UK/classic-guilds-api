@@ -20,7 +20,7 @@
     "passport": "^0.4.1",
     "passport-discord": "^0.1.4",
     "pg": "^7.18.2",
-    "pug": "^2.0.4",
+    "pug": "^3.0.1",
     "sequelize": "^5.22.3",
     "ucfirst": "^1.0.0"
   }
